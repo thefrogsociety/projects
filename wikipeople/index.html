@@ -109,6 +109,16 @@
 
 
     </style>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-BVEG40EVEG"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-BVEG40EVEG');
+    </script>
+
 </head>
 <body class="h-full text-gray-100">
 
@@ -480,11 +490,20 @@
              });
 
              // Add Randomize Button Listener
-             d3.select('#randomize-button').on('click', () => {
-                 if (allNodeNames && allNodeNames.length > 0) { const randomIndex = Math.floor(Math.random() * allNodeNames.length); const randomName = allNodeNames[randomIndex]; searchInput.value = randomName; updateGraph(randomName); } else { searchMessage.text("Data not loaded yet for randomize."); }
-             });
+            d3.select('#randomize-button').on('click', () => {
+	            if (typeof gtag === 'function') {
+		            gtag('event', 'randomize');
+	            }
 
-
+	            if (allNodeNames && allNodeNames.length > 0) { 
+		            const randomIndex = Math.floor(Math.random() * allNodeNames.length); 
+		            const randomName = allNodeNames[randomIndex]; 
+		            searchInput.value = randomName; 
+		            updateGraph(randomName); 
+	            } else { 
+		            searchMessage.text("Data not loaded yet for randomize."); 
+	            }
+            });
         }).catch(error => { /* Error Handling */
             console.error("Error loading full graph data:", error);
             loadingText.text("Error: Could not load full_graph.json.");
@@ -515,19 +534,38 @@
 
             // Rick Astley Easter Egg (Silent Redirect)
             if (rootPersonName.toLowerCase() === 'rick astley') {
-                searchLoading.style('display', 'none'); window.location.href = RICK_ROLL_URL; return;
+	        searchLoading.style('display', 'none'); 
+	        window.location.href = RICK_ROLL_URL; 
+	        return;
             }
-            if (rootPersonName.toLowerCase() === 'the frog society') { /* Frog message */
-                 searchMessage.text("he is too shy to be on wikipedia but he wants you to know that he loves you for remembering him <3"); searchLoading.style('display', 'none'); svg.selectAll("g").remove(); statsContentDiv.html(''); statsDescriptionDiv.html(''); return;
+
+            if (rootPersonName.toLowerCase() === 'the frog society') { 
+	            if (typeof gtag === 'function') {
+		            gtag('event', 'found_easter_egg', { 'easter_egg_name': 'the frog society' });
+	            }
+	            // ----------------------
+	            searchMessage.text("he is too shy to be on wikipedia but he wants you to know that he loves you for remembering him <3"); 
+	            searchLoading.style('display', 'none'); 
+	            svg.selectAll("g").remove(); 
+	            statsContentDiv.html(''); 
+	            statsDescriptionDiv.html(''); 
+	            return;
             }
+
             if (rootPersonName.toLowerCase() === 'huyenthefabulous') { 
-                searchMessage.text("hi u :))))"); 
-                searchLoading.style('display', 'none'); 
-                svg.selectAll("g").remove(); 
-                statsContentDiv.html(''); 
-               statsDescriptionDiv.html(''); 
-                return;
-            }            let actualRootName = rootPersonName; let found = false; const lowerCaseName = rootPersonName.toLowerCase();
+	            if (typeof gtag === 'function') {
+		            gtag('event', 'found_easter_egg', { 'easter_egg_name': 'huyenthefabulous' });
+	            }
+	            // ----------------------
+	            searchMessage.text("hi u :))))"); 
+	            searchLoading.style('display', 'none'); 
+	            svg.selectAll("g").remove(); 
+	            statsContentDiv.html(''); 
+	            statsDescriptionDiv.html(''); 
+	            return;
+            }
+       
+            let actualRootName = rootPersonName; let found = false; const lowerCaseName = rootPersonName.toLowerCase();
             for (const key of fullNodesMap.keys()) { if (key.toLowerCase() === lowerCaseName) { actualRootName = key; found = true; break; } }
 
             if (!found) { 
@@ -637,13 +675,46 @@
         function handleMouseOver(event, d) { tooltip.style("opacity", 1).html(d.id); d3.select(this).transition().duration(100).attr("r", d.group === 'root' ? 15 : 10); }
         function handleMouseMove(event) { tooltip.style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 28) + "px"); }
         function handleMouseOut(event, d) { tooltip.style("opacity", 0); d3.select(this).transition().duration(100).attr("r", d.group === 'root' ? 10 : 5); }
-        function handleDoubleClick(event, d) { if (d.url) window.open(d.url, '_blank'); else console.warn("Node clicked, but no URL found:", d); }
+
+        function handleDoubleClick(event, d) { 
+	        if (typeof gtag === 'function') {
+		        gtag('event', 'view_person_details', { 'person_name': d.id });
+	        }
+	    // ----------------------
+
+	        if (d.url) window.open(d.url, '_blank'); 
+	        else console.warn("Node clicked, but no URL found:", d); 
+        }
 
         // --- Search Event Listeners ---
-        const searchInput = document.getElementById('search-input'); const searchButton = d3.select('#search-button');
-        searchButton.on('click', () => { const searchTerm = searchInput.value.trim(); if (searchTerm) updateGraph(searchTerm); });
-        searchInput.addEventListener('keypress', function(event) { if (event.key === 'Enter') { const searchTerm = searchInput.value.trim(); if (searchTerm) updateGraph(searchTerm); } });
+        const searchInput = document.getElementById('search-input');
+        const searchButton = d3.select('#search-button');
 
+        // MODIFIED: Added gtag event
+        searchButton.on('click', () => { 
+	        const searchTerm = searchInput.value.trim(); 
+	        if (searchTerm) {
+		        // --- ADD THIS LINE ---
+		        if (typeof gtag === 'function') {
+			        gtag('event', 'search', { 'search_term': searchTerm });
+		        }
+		        // ---------------------
+		        updateGraph(searchTerm); 
+	        }
+        });
+	
+        // MODIFIED: Added gtag event
+        searchInput.addEventListener('keypress', function(event) { 
+	        if (event.key === 'Enter') { 
+		        const searchTerm = searchInput.value.trim(); 
+		        if (searchTerm) {
+			        if (typeof gtag === 'function') {
+				        gtag('event', 'search', { 'search_term': searchTerm });
+			        }
+			        updateGraph(searchTerm); 
+		        }
+	        } 
+        });
         // --- Explanation Toggle Listener ---
         explanationToggle.on('click', () => {
              const isExpanded = explanationContent.style('display') === 'block'; explanationContent.style('display', isExpanded ? 'none' : 'block'); explanationContainer.classed('expanded', !isExpanded);
