@@ -767,6 +767,10 @@
 	        else console.warn("Node clicked, but no URL found:", d); 
         }
 
+        // --- Search Event Listeners ---
+        const searchInput = document.getElementById('search-input');
+        const searchButton = d3.select('#search-button');
+
         // MODIFIED: Added gtag event
         searchButton.on('click', () => { 
 	        const searchTerm = searchInput.value.trim(); 
@@ -805,65 +809,6 @@
 
         // Make toggle function globally available (for HTML onclick)
         window.toggleContainer = toggleContainer;
-
-        // --- Autocomplete Logic ---
-        // 1. Get references to the HTML elements
-        const autocompleteResults = document.getElementById('autocomplete-results');
-
-        // 2. Listen for the 'input' event on the search bar
-        searchInput.addEventListener('input', () => {
-            const searchTerm = searchInput.value.trim().toLowerCase();
-    
-            // Clear results if the search bar is empty
-            if (searchTerm.length === 0) {
-                autocompleteResults.innerHTML = '';
-                autocompleteResults.style.display = 'none';
-                return;
-            }
-
-            // Filter allNodeNames to find matches (limit to 10)
-            const matches = allNodeNames.filter(name => 
-                name.toLowerCase().startsWith(searchTerm)
-            ).slice(0, 10);
-
-            // Clear previous results
-            autocompleteResults.innerHTML = '';
-
-            if (matches.length > 0) {
-                // Show the dropdown container
-                autocompleteResults.style.display = 'block';
-
-                // Create and add a div for each match
-                matches.forEach(name => {
-                    const resultItem = document.createElement('div');
-                    resultItem.className = 'autocomplete-item';
-                    resultItem.textContent = name;
-
-                    // Handle clicking on a suggestion
-                    // We use 'mousedown' because it fires before 'blur'
-                    resultItem.addEventListener('mousedown', () => {
-                        searchInput.value = name; // Set input text
-                        autocompleteResults.innerHTML = ''; // Clear dropdown
-                        autocompleteResults.style.display = 'none';
-                        updateGraph(name); // Run the search
-                    });
-
-                    autocompleteResults.appendChild(resultItem);
-                });
-            } else {
-                // No matches found, hide the dropdown
-                autocompleteResults.style.display = 'none';
-            }
-        });
-
-        // 3. Hide the dropdown when the user clicks away
-        searchInput.addEventListener('blur', () => {
-            // We use a small delay to allow the 'mousedown' event to fire
-            setTimeout(() => {
-                autocompleteResults.innerHTML = '';
-                autocompleteResults.style.display = 'none';
-            }, 150); // 150ms delay
-        });
 
     </script>
 </body>
