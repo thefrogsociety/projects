@@ -521,33 +521,10 @@
          });
 
         // --- Display Leaderboard ---
-        // --- Display Leaderboard ---
         function displayLeaderboard() {
-            leaderboardListOl.html(''); // Clear existing list
-            const topN = rankedNodes.slice(0, LEADERBOARD_SIZE);
-    
-        // MODIFIED: This logic is fixed to correctly add click listeners
-        // without causing a script error.
-            topN.forEach((node, index) => { 
-        
-                // 1. Create the <li> element and store a reference to it
-                const liElement = leaderboardListOl.append('li')
-                    .text(`${index + 1}. ${node.id}`); // Set the text (e.g., "1. Michael Stevens")
-            
-                // 2. Append the <span> for the degree count
-                liElement.append('span')
-                    .text(`(${node.inDegree})`);
-            
-                // 3. Add the click listener directly to the <li> element
-                liElement.on('click', () => {
-                    // Set the search bar text to the clicked name
-                    document.getElementById('search-input').value = node.id;
-                    // Run the updateGraph function with that name
-                    updateGraph(node.id);
-                });
-            });
+            leaderboardListOl.html(''); const topN = rankedNodes.slice(0, LEADERBOARD_SIZE);
+            topN.forEach((node, index) => { leaderboardListOl.append('li').text(`${index + 1}. ${node.id}`).append('span').text(`(${node.inDegree})`); });
         }
-
 
         // --- Simulation Setup ---
         function setupSimulation() {
@@ -809,6 +786,7 @@
 
         // Make toggle function globally available (for HTML onclick)
         window.toggleContainer = toggleContainer;
+
 
     </script>
 </body>
