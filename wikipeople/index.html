@@ -88,6 +88,17 @@
          #leaderboard-container ol { list-style-position: inside; padding-left: 0; }
          #leaderboard-container li { margin-bottom: 2px; }
          #leaderboard-container li span { color: #aaa; margin-left: 5px; }
+        
+         /* Makes leaderboard items look clickable */
+        #leaderboard-container li { 
+            margin-bottom: 2px; 
+            cursor: pointer; /* Add pointer cursor */
+            transition: color 0.2s;
+        }
+        #leaderboard-container li:hover {
+            color: #d8ff4d; /* Highlight on hover */
+        }
+        #leaderboard-container li span { color: #aaa; margin-left: 5px; }
 
          /* Loading Text */
          #loading { font-family: 'Press Start 2P', cursive; }
@@ -510,9 +521,32 @@
          });
 
         // --- Display Leaderboard ---
+        // --- Display Leaderboard ---
         function displayLeaderboard() {
-            leaderboardListOl.html(''); const topN = rankedNodes.slice(0, LEADERBOARD_SIZE);
-            topN.forEach((node, index) => { leaderboardListOl.append('li').text(`${index + 1}. ${node.id}`).append('span').text(`(${node.inDegree})`); });
+            leaderboardListOl.html(''); // Clear existing list
+            const topN = rankedNodes.slice(0, LEADERBOARD_SIZE);
+    
+            topN.forEach((node, index) => { 
+                const li = leaderboardListOl.append('li')
+                    .text(`${index + 1}. ${node.id}`)
+                    .append('span')
+                    .text(`(${node.inDegree})`);
+            
+                // ADDED: Click event listener
+                // Use 'node.id' to get the name of the clicked person
+                li.getParent().on('click', () => {
+                    // Set the search bar text to the clicked name
+                    document.getElementById('search-input').value = node.id;
+                    // Run the updateGraph function with that name
+                    updateGraph(node.id);
+                });
+            });
+
+            // Helper function to get the parent 'li' from the 'span'
+            // This is needed because we append the span last
+            d3.selection.prototype.getParent = function() {
+                return d3.select(this.node().parentNode);
+            };
         }
 
         // --- Simulation Setup ---
