@@ -246,6 +246,39 @@
             function dragended(event, d) { if (!event.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }
             return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
         }
+            // // --- Levenshtein Distance Function ---
+            // This function is REQUIRED for the suggestion logic to work.
+            function levenshteinDistance(a, b) {
+                if (a.length === 0) return b.length; 
+                if (b.length === 0) return a.length;
+                
+                const matrix = [];
+
+                // Increment along the first column of each row
+                for (let i = 0; i <= b.length; i++) {
+                    matrix[i] = [i];
+                }
+
+                // Increment each column in the first row
+                for (let j = 0; j <= a.length; j++) {
+                    matrix[0][j] = j;
+                }
+
+                // Fill in the rest of the matrix
+                for (let i = 1; i <= b.length; i++) {
+                    for (let j = 1; j <= a.length; j++) {
+                        const cost = a[j - 1] === b[i - 1] ? 0 : 1;
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j] + 1,     // Deletion
+                            matrix[i][j - 1] + 1,     // Insertion
+                            matrix[i - 1][j - 1] + cost // Substitution
+                        );
+                    }
+                }
+
+                return matrix[b.length][a.length];
+            }
+
 
         // --- Fetch Wikipedia Description Function ---
         async function fetchWikipediaDescription(personName) {
@@ -486,14 +519,66 @@
             if (rootPersonName.toLowerCase() === 'the frog society') { /* Frog message */
                  searchMessage.text("he is too shy to be on wikipedia but he wants you to know that he loves you for remembering him <3"); searchLoading.style('display', 'none'); svg.selectAll("g").remove(); statsContentDiv.html(''); statsDescriptionDiv.html(''); return;
             }
-
-            let actualRootName = rootPersonName; let found = false; const lowerCaseName = rootPersonName.toLowerCase();
+            if (rootPersonName.toLowerCase() === 'huyenthefabulous') { 
+                searchMessage.text("hi u :))))"); 
+                searchLoading.style('display', 'none'); 
+                svg.selectAll("g").remove(); 
+                statsContentDiv.html(''); 
+               statsDescriptionDiv.html(''); 
+                return;
+            }            let actualRootName = rootPersonName; let found = false; const lowerCaseName = rootPersonName.toLowerCase();
             for (const key of fullNodesMap.keys()) { if (key.toLowerCase() === lowerCaseName) { actualRootName = key; found = true; break; } }
 
-            if (!found) { /* Suggestion logic removed */
-                 searchMessage.text(`'${rootPersonName}' not found.`);
-                 searchLoading.style('display', 'none'); statsContentDiv.html(''); statsDescriptionDiv.html(''); return;
+            if (!found) { 
+                // --- SUGGESTION LOGIC (CLEANED) ---
+                let minDistance = Infinity;
+                let suggestion = null;
+                const lowerCaseInput = rootPersonName.toLowerCase();
+
+                // Find closest match
+                // Safety check to make sure allNodeNames is loaded
+                if (allNodeNames && allNodeNames.length > 0) {
+                    for (const name of allNodeNames) {
+                        const dist = levenshteinDistance(lowerCaseInput, name.toLowerCase());
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            suggestion = name;
+                        }
+                    }
+                }
+
+                // --- DEBUGGING ---
+                // Check your browser's console (F12) to see this log.
+                // It will tell you the closest match and its "distance".
+                console.log(`Input: '${rootPersonName}', Closest match: '${suggestion}', Distance: ${minDistance}`);
+
+                // Check if suggestion is good enough to show
+                // Removed "minDistance > 0" as it's redundant.
+                if (suggestion && minDistance <= SUGGESTION_THRESHOLD) {
+                    
+                    // Display suggestion with clickable link
+                    searchMessage.html(`'${rootPersonName}' not found. Did you mean: <a id="suggestion-link">${suggestion}</a>?`);
+                    
+                    // Add click listener to the new link
+                    d3.select('#suggestion-link').on('click', () => {
+                        document.getElementById('search-input').value = suggestion; // Update search bar
+                        updateGraph(suggestion); // Rerun search
+                    });
+
+                } else {
+                    // No suggestion found (or it's too different), just show "not found"
+                    searchMessage.text(`'${rootPersonName}' not found.`);
+                }
+                // --- END SUGGESTION LOGIC ---
+
+                // Stop loading and clear panels
+                searchLoading.style('display', 'none'); 
+                statsContentDiv.html(''); 
+                statsDescriptionDiv.html(''); 
+                return;
             }
+
+
             rootPersonName = actualRootName; // Use correct case
 
             const description = await fetchWikipediaDescription(rootPersonName); // Fetch description
